@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  api:
+    build: .
+    ports:
+     - "80:80"
+    environment:
+      API_CRYPTO_KEY: 71O9u5\/M2NGuxKby6x+MeCmSlMQnYx3b1d7TwntUHRs=
+      DB_HOST: db
+      DB_NAME: CR_LIBRE_DB
+      DB_USER: USER
+      DB_PASSWORD: PASS
+      USER_SESSION_LIFETIME: 1000
+  db:
+    image: mariadb
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/data:/var/lib/mysql
+      - ./db/init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: ROOT_PASSWORD
+      MYSQL_DATABASE: CR_LIBRE_DB
+      MYSQL_USER: USER
+      MYSQL_PASSWORD: PASS

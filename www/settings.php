@@ -8,21 +8,20 @@ global $config;
 # Database
 #
 #####################################################################################
-# Database name
-$config['db']['name'] = "crlibre_api_demo";
-# Database password
-//$config['db']['pwd'] = "g[H6gmrn6pb1";
-$config['db']['pwd'] = 'S3syyZNw7woqFrm';
-# Database user name
-$config['db']['user'] = "crlibre_api_demo";
 # Database host
-$config['db']['host'] = "localhost";
+$config['db']['host'] = getenv('DB_HOST');
+# Database name
+$config['db']['name'] = getenv('DB_NAME');
+# Database user name
+$config['db']['user'] = getenv('DB_USER');
+# Database password
+$config['db']['pwd'] = getenv('DB_PASSWORD');
 ##############################################################################
 #
 # Crypto Keys
 #
 ##############################################################################
-$config['crypto']['key'] = "LkWfgWGQ/XhSd+ML13PEJsuecTHUPs9quAWGs1fMC9o=";
+$config['crypto']['key'] = getenv('API_CRYPTO_KEY');
 
 ##############################################################################
 #
@@ -45,7 +44,7 @@ $config['core']['host'] = "mySite.com";
 
 # Time in seconds for the lifetime of a session, after this time, the user must
 # log back in
-$config['users']['sessionLifetime'] = 1000;
+$config['users']['sessionLifetime'] = getenv('USER_SESSION_LIFETIME');
 
 /*******************************************************************************
  * You should not need to touch anything beyond this point
