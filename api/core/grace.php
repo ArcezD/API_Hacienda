@@ -40,7 +40,11 @@ function _grace_talk($msg, $who = 'info') {
         if(conf_get('display', 'grace', false)){            
             echo $msg . ($who == 'a' ? "" : "\n" . "<br />");
         }
-        
+
+        if(conf_get('default', 'grace', false)){
+            error_log($msg, 0);
+        }
+
         if(conf_get('errors', 'grace', false)){
             if(!file_exists($fileName)){
                 mkdir($fileName, 0777, true);

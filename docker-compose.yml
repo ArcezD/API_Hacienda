@@ -6,12 +6,13 @@ services:
     ports:
      - "80:80"
     environment:
-      API_CRYPTO_KEY: 71O9u5\/M2NGuxKby6x+MeCmSlMQnYx3b1d7TwntUHRs=
+      API_CRYPTO_KEY: 9fQxwLffIOU7EFQVtnTJyet0RwOHwT2VSUGnY0C5AAM=
       DB_HOST: db
       DB_NAME: CR_LIBRE_DB
       DB_USER: USER
       DB_PASSWORD: PASS
       USER_SESSION_LIFETIME: -1
+      IS_DEBUG: 'true'
   db:
     image: mariadb
     ports:

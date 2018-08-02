@@ -62,6 +62,8 @@ $config['grace']['logPath'] = "../api/errors/";
 $config['grace']['errors'] = false;
 #If display errors
 $config['grace']['display'] = false;
+#If send logs to PHP's system logger
+$config['grace']['default'] = false;
 
 /*******************************************************************************
  * You should not need to touch anything beyond this point
