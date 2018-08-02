@@ -11,7 +11,7 @@ services:
       DB_NAME: CR_LIBRE_DB
       DB_USER: USER
       DB_PASSWORD: PASS
-      USER_SESSION_LIFETIME: 1000
+      USER_SESSION_LIFETIME: -1
   db:
     image: mariadb
     ports:

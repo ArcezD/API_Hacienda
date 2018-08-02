@@ -8,20 +8,21 @@ global $config;
 # Database
 #
 #####################################################################################
-# Database host
-$config['db']['host'] = getenv('DB_HOST');
 # Database name
-$config['db']['name'] = getenv('DB_NAME');
-# Database user name
-$config['db']['user'] = getenv('DB_USER');
+$config['db']['name'] = "{dbName}";
 # Database password
-$config['db']['pwd'] = getenv('DB_PASSWORD');
+$config['db']['pwd'] = "{dbPss}";
+# Database user name
+$config['db']['user'] = "{dbUser}";
+# Database host
+$config['db']['host'] = "{dbHost}";
 ##############################################################################
 #
 # Crypto Keys
 #
 ##############################################################################
-$config['crypto']['key'] = getenv('API_CRYPTO_KEY');
+$config['crypto']['key'] = "{cryptoKey}";
+
 
 ##############################################################################
 #
@@ -33,7 +34,7 @@ $config['crypto']['key'] = getenv('API_CRYPTO_KEY');
 # same directory as the Api, but they can be placed anywhere else
 
 # The core installation: This is probably the only one you need to touch
-$config['modules']['coreInstall'] = "../api/";
+$config['modules']['coreInstall'] = "{apiPath}";
 
 # Name of your site, Not in use really
 $config['core']['siteName'] = 'MySite';
@@ -44,7 +45,7 @@ $config['core']['host'] = "mySite.com";
 # Time in seconds for the lifetime of a session, after this time, the user must
 # log back in
 # In case you need it, -1 allows user to stay logged in
-$config['users']['sessionLifetime'] = getenv('USER_SESSION_LIFETIME');
+$config['users']['sessionLifetime'] = -1;
 
 # If you want to allow CORS requests
 $config['core']['cors'] = true;
@@ -61,7 +62,7 @@ $config['grace']['logPath'] = "../api/errors/";
 $config['grace']['errors'] = false;
 #If display errors
 $config['grace']['display'] = false;
- 
+
 /*******************************************************************************
  * You should not need to touch anything beyond this point
  */
