@@ -63,3 +63,28 @@ La que se llama www contiene un archivo de configuración, en donde se modifican
 * Envió a Hacienda del xml de Mensaje Aceptación (Aceptación total, Parcialmente y Rechazo)
 * Consulta de estado de los comprobantes
 
+## Ejecutar mediante Docker
+
+Para ejecutar utilizando [Docker](https://hub.docker.com/r/arcezd/cr-libre-api-hacienda/)
+
+### Ejecutar como contenedor independiente
+
+```console
+$ docker run -it --rm --name api-hacienda \
+    -e "API_CRYPTO_KEY=9fQxwLffIOU7EFQVtnTJyet0RwOHwT2VSUGnY0C5AAM=" \
+    -e "DB_HOST=172.0.0.1" \
+    -e "DB_NAME=CR_LIBRE_DB" \
+    -e "DB_USER=USER" \
+    -e "DB_PASSWORD=PASS" \
+    -e "USER_SESSION_LIFETIME=-1" \
+    -e "IS_DEBUG=true" \
+    arcezd/cr-libre-api-hacienda
+```
+
+### Ejecutar utilizando docker-compose
+
+[docker-compose.yml](https://github.com/ArcezD/API_Hacienda/blob/docker/docker-compose.yml)
+
+```console
+$ docker-compose up
+```
