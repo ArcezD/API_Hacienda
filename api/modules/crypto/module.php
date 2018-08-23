@@ -32,12 +32,6 @@ function crypto_init() {
             'action' => 'makeKey256',
             'access' => 'users_openAccess',
             'file' => 'crypto.php'
-        ),
-        array(
-            'r' => 'test',
-            'action' => 'crypto_test',
-            'access' => 'users_openAccess',
-            'file' => 'crypto.php'
         )
     );
     return $paths;

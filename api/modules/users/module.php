@@ -31,7 +31,7 @@ define('ERROR_USERS_EXISTS', '-304');
 define('SUCCESS_USERS_BG_EXISTS', '301');
 
 //! No secret token or not a valid token
-define('ERROR_USERS_NO_TOKEN', '-305');
+define('ERROR_USERS_NO_TOKEN', '-302');
 
 /** @} */
 
@@ -39,6 +39,7 @@ define('ERROR_USERS_NO_TOKEN', '-305');
  * Boot up procedure
  */
 function users_bootMeUp() {
+
     users_loadCurrentUser();
 }
 
@@ -46,7 +47,6 @@ function users_bootMeUp() {
  * Loads the current user
  */
 function users_loadCurrentUser() {
-    
     global $user;
     # If I am running on emebed mode I don't have any users, so I will just load it from the session
     $user = users_load(array('userName' => params_get('iam', '')));
@@ -278,18 +278,21 @@ function users_registerNew() {
                     "timestamp" => time(),
                     "lastAccess" => time(),
                     "pwd" => params_get('pwd', ''),
-                    "avatar" => 0
+                    "avatar" => 0,
+                    "settings" => 'NULL'
                 )
         );
-
-        # Load the user and log it in   
+        # Load the user and log it in
         $user = users_loadByName(params_get('userName'));
 
         return users_logMeIn();
     } else {
         grace_debug("This user already exists");
-        grace_debug("This is only a test");
-        return ERROR_USERS_EXISTS;
+        $arrayResp = array(
+            "code" => ERROR_USERS_EXISTS,
+            "status" => "usuario ya existe"
+        );
+        return $arrayResp;
     }
 }
 
@@ -313,7 +316,6 @@ function users_logMeIn() {
         grace_debug("username based login");
         $user = users_load(array('userName' => $userName));
     }
-
     if (password_verify(params_get('pwd', ''), users_deshash($user->pwd))) {
         // Create a token
         grace_debug("Able to login");
@@ -324,7 +326,7 @@ function users_logMeIn() {
         return array('sessionKey' => users_generateSessionKey($user->idUser), 'userName' => $user->userName);
     } else {
 
-        grace_debug(sprintf("Not able to login %s | %s", params_get('pwd', ''), users_deshash($user->pwd)));
+     //   grace_debug(sprintf("Not able to login %s | %s", params_get('pwd', ''), users_deshash($user->pwd) . " viene " . $user->pwd));
         return ERROR_USERS_WRONG_LOGIN_INFO;
     }
 }
@@ -333,19 +335,20 @@ function users_logMeIn() {
  * Create a basic empty user
  */
 function users_createBasic() {
-    return (object) array('idUser' => 0, 'pwd' => '');
+
+    $user = (object) array('idUser' => 0, 'pwd' => '');
+    return $user;
 }
 
 /**
  * Generates a session key
  */
 function users_generateSessionKey($idUser) {
-    $q = sprintf("delete from sessions where idUser='".$idUser."' and ip='".$_SERVER['REMOTE_ADDR']."'");
+    $q = sprintf("delete from sessions where idUser='" . $idUser . "'");
     db_query($q, 0);
-    
+
     modules_loader("crypto", "crypto.php");
-    $key = conf_get('key', 'crypto');
-    $sessionKey = crypto_encrypt(time() * rand(0, 1000));
+    $sessionKey = crypto_encrypt(password_hash(time() * rand(0, 1000)));
 
     $q = sprintf("INSERT INTO sessions (idUser, sessionKey, ip, lastAccess) "
             . "VALUES('%s', '%s', '%s', '%s')", $idUser, $sessionKey, $_SERVER['REMOTE_ADDR'], time());
@@ -360,25 +363,30 @@ function users_generateSessionKey($idUser) {
  * @todo Use php's function
  */
 function users_hash($pwd) {
+    // Turn off all error reporting
+    error_reporting(0);
     modules_loader("crypto", "crypto.php");
-    
     $salt;
-    
     if (version_compare(PHP_VERSION, '7.0', '<')) {
         $salt = mcrypt_create_iv(22, MCRYPT_DEV_URANDOM);
+        $options = array(
+            'salt' => $salt,
+            'cost' => 12
+        );
     } else {
         $salt = random_bytes(22);
+        $options = array(
+            'cost' => 12
+        );
     }
-    $options = array(
-        'salt' => $salt,
-        'cost' => 12,
-    );
+
     $hashPass = password_hash($pwd, PASSWORD_BCRYPT, $options);
     $rsp = base64_encode(crypto_encrypt($hashPass));
     return $rsp;
 }
 
 function users_deshash($pwd) {
+
     $pwd = base64_decode($pwd);
     modules_loader("crypto", "crypto.php");
     return crypto_desencrypt($pwd);
@@ -411,10 +419,8 @@ function users_load($by = array()) {
     FROM users
     %s", $where);
 
-    $q .= " AND `status` > 0 ";
-    
     $user = db_query($q, 1);
-    
+
     # If no user found or erros
     if ($user == ERROR_DB_NO_RESULTS_FOUND || $user == ERROR_DB_ERROR) {
         grace_debug("Unable to locate user");
@@ -472,15 +478,13 @@ function users_confirmSessionKey() {
         return false;
     } else {
         # Lets confirm the time frame   
-        if(conf_get('sessionLifetime', 'users') != -1){
+        if (conf_get('sessionLifetime', 'users') != -1) {
             if ((time() - $r->lastAccess) > conf_get('sessionLifetime', 'users')) {
                 grace_debug("User last access is to old");
                 return false;
             }
-        }else{
-            grace_debug("The user still here :)");
+            return $r->idUser;
         }
-        return $r->idUser;
     }
 }
 
@@ -529,7 +533,11 @@ function users_updateProfile() {
     if ($user->userName != $dets['userName']) {
         $newUserByName = users_load(array('userName' => $dets['userName']));
         if ($newUserByName->idUser != 0) {
-            return ERROR_USERS_EXISTS;
+            $arrayResp = array(
+                "code" => ERROR_USERS_EXISTS,
+                "status" => "usuario ya existe"
+            );
+            return $arrayResp;
         }
     }
 
@@ -538,16 +546,28 @@ function users_updateProfile() {
         grace_debug("Requested a new email");
         $newUserByEmail = users_load(array('email' => $dets['email']));
         if ($newUserByEmail->idUser != 0) {
-            return ERROR_USERS_EXISTS;
+            $arrayResp = array(
+                "code" => ERROR_USERS_EXISTS,
+                "status" => "usuario ya existe"
+            );
+            return $arrayResp;
         }
     }
 
     $r = _users_update($dets);
 
     if ($r == 0) {
-        return ERROR_ERROR;
+        $arrayResp = array(
+            "code" => ERROR_ERROR,
+            "status" => "error registrando"
+        );
+        return $arrayResp;
     }
-    return SUCCESS_ALL_GOOD;
+    $arrayResp = array(
+        "code" => SUCCESS_ALL_GOOD,
+        "status" => "registrado con exito"
+    );
+    return $arrayResp;
 }
 
 /**
@@ -555,7 +575,10 @@ function users_updateProfile() {
  * # @todo create a validation tool for this
  */
 function users_cleanName($name) {
-    return trim($name);
+
+    $name = trim($name);
+
+    return $name;
 }
 
 /**
@@ -569,7 +592,7 @@ function _users_update($dets) {
     if (!isset($dets['pwd']) || trim($dets['pwd']) == '') {
         $dets['pwd'] = 'pwd';
     } else {
-        $dets['pwd'] = "'" . users_hash($dets['pwd']) . "'";
+        $dets['pwd'] = "'" . $dets['pwd'] . "'";
     }
 
     # Merge the current information about the user and the new information provided
@@ -638,8 +661,8 @@ function users_personalBgUpload() {
  * Helper function to actually create a new user and register it in the db
  */
 function _users_register($userDets) {
-    $q = sprintf("INSERT INTO users (fullName, userName, email, about, country, status, timestamp, lastAccess, pwd, avatar)
-        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')", $userDets['fullName'], $userDets['userName'], $userDets['email'], addslashes($userDets['about']), $userDets['country'], $userDets['status'], $userDets['timestamp'], $userDets['lastAccess'], users_hash($userDets['pwd']), $userDets['avatar']
+    $q = sprintf("INSERT INTO users (fullName, userName, email, about, country, status, timestamp, lastAccess, pwd, avatar,settings)
+        VALUES('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')", $userDets['fullName'], $userDets['userName'], $userDets['email'], addslashes($userDets['about']), $userDets['country'], $userDets['status'], $userDets['timestamp'], $userDets['lastAccess'], users_hash($userDets['pwd']), $userDets['avatar'], $userDets['settings']
     );
     db_query($q, 0);
 }
@@ -647,6 +670,7 @@ function _users_register($userDets) {
 # Create a basic empty user
 
 function _userCreateBasic() {
+
     $theUser = (object) array('idUser' => 0, 'pwd' => '');
     return $theUser;
 }
@@ -713,7 +737,7 @@ function users_access($perm, $theUser = false) {
  * Generate a new temporary password for recovery
  */
 function users_recoverPwd() {
-
+    //
     global $user;
 
     # This call probably won't have the user via iam, so, I will load it
@@ -738,19 +762,20 @@ function users_recoverPwd() {
     # Generate a new temporary password
 
     modules_loader("crypto", "crypto.php");
-    $user->pwd = substr(crypto_encrypt(password_hash(rand(0, 1000) + time()), 0, 6));
+    $temp = rand(0, 1000) + time();
+    $user->pwd = users_hash($temp);
 
     grace_debug("New tmp pwd: " . $user->pwd);
 
     # Update account
-    if (_users_update((array) $user) == SUCCESS_ALL_GOOD) {
+    if (_users_update((array) $user)) {
         # Send email
         grace_debug("I will send the email");
         $resp = mailer_sendEmail(array(
             'to' => $user->email,
             'subject' => 'Recuperación de Clave ' . conf_get('siteName', 'core', 'Mi Sitio'),
-            'replyTo' => 'no-repy@' . conf_get("domain", "core", "example.net"),
-            'message' => 'Su nueva clave es: ' . $user->pwd
+            'replyTo' => 'no-repy@' . conf_get("domain", "core", "crlibre.or"),
+            'message' => 'Su nueva clave es: ' . $temp
         ));
         if ($resp == true) {
             return SUCCESS_ALL_GOOD;
